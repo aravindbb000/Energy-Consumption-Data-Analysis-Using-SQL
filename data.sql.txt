@@ -1,0 +1,41 @@
+CREATE DATABASE energy_db;
+-- Drop tables if they already exist (for re-runs)
+DROP TABLE IF EXISTS energy_consumption;
+DROP TABLE IF EXISTS region_info;
+
+-- Region info table
+CREATE TABLE region_info (
+    region_id SERIAL PRIMARY KEY,
+    region_name VARCHAR(100),
+    population INT,
+    area_sq_km DECIMAL(10,2)
+);
+
+-- Energy consumption table
+CREATE TABLE energy_consumption (
+    consumption_id SERIAL PRIMARY KEY,
+    region_id INT REFERENCES region_info(region_id),
+    date DATE,
+    energy_kwh DECIMAL(10,2),
+    peak_usage_hour INT,
+    renewable_percentage DECIMAL(5,2)
+);
+-- Insert sample region info
+INSERT INTO region_info (region_name, population, area_sq_km)
+VALUES
+('Bavaria', 13000000, 70550.00),
+('Berlin', 3600000, 891.68),
+('Hesse', 6200000, 21114.00),
+('Saxony', 4100000, 18449.00);
+
+-- Insert sample energy consumption data
+INSERT INTO energy_consumption (region_id, date, energy_kwh, peak_usage_hour, renewable_percentage)
+VALUES
+(1, '2024-01-01', 15000.5, 19, 32.5),
+(1, '2024-01-02', 14550.2, 20, 33.2),
+(2, '2024-01-01', 8900.3, 21, 45.0),
+(2, '2024-01-02', 9050.7, 22, 44.8),
+(3, '2024-01-01', 12300.6, 18, 40.2),
+(3, '2024-01-02', 12600.0, 19, 41.0),
+(4, '2024-01-01', 7800.0, 17, 38.9),
+(4, '2024-01-02', 8000.2, 18, 39.5);

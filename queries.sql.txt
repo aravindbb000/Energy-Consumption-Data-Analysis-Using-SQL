@@ -1,0 +1,111 @@
+#-- View all data
+SELECT * FROM energy_consumption;
+
+#-- Count rows per region
+SELECT region_id, COUNT(*) AS num_records
+FROM energy_consumption
+GROUP BY region_id;
+
+#-- Check date range
+SELECT MIN(date) AS start_date, MAX(date) AS end_date FROM energy_consumption;
+
+#-- Join region info with energy consumption
+SELECT 
+    r.region_name,
+    e.date,
+    e.energy_kwh,
+    e.peak_usage_hour,
+    e.renewable_percentage
+FROM energy_consumption e
+JOIN region_info r ON e.region_id = r.region_id
+ORDER BY r.region_name, e.date;
+
+#-- Total energy consumption per region
+SELECT 
+    r.region_name,
+    ROUND(SUM(e.energy_kwh), 2) AS total_energy
+FROM energy_consumption e
+JOIN region_info r ON e.region_id = r.region_id
+GROUP BY r.region_name
+ORDER BY total_energy DESC;
+
+#-- Average renewable energy percentage per region
+SELECT 
+    r.region_name,
+    ROUND(AVG(e.renewable_percentage), 2) AS avg_renewable
+FROM energy_consumption e
+JOIN region_info r ON e.region_id = r.region_id
+GROUP BY r.region_name
+ORDER BY avg_renewable DESC;
+
+#-- Find peak usage hour per region (most frequent hour)
+SELECT 
+    r.region_name,
+    e.peak_usage_hour,
+    COUNT(*) AS occurrences
+FROM energy_consumption e
+JOIN region_info r ON e.region_id = r.region_id
+GROUP BY r.region_name, e.peak_usage_hour
+ORDER BY r.region_name, occurrences DESC;
+
+#-- Daily total energy consumption across all regions
+SELECT 
+    date,
+    ROUND(SUM(energy_kwh), 2) AS total_energy_kwh
+FROM energy_consumption
+GROUP BY date
+ORDER BY date;
+
+#-- Compare renewable vs non-renewable energy
+SELECT 
+    date,
+    ROUND(AVG(renewable_percentage), 2) AS avg_renewable_percent,
+    ROUND(100 - AVG(renewable_percentage), 2) AS avg_nonrenewable_percent
+FROM energy_consumption
+GROUP BY date
+ORDER BY date;
+
+#-- Region with highest average daily consumption
+SELECT 
+    r.region_name,
+    ROUND(AVG(e.energy_kwh), 2) AS avg_daily_consumption
+FROM energy_consumption e
+JOIN region_info r ON e.region_id = r.region_id
+GROUP BY r.region_name
+ORDER BY avg_daily_consumption DESC
+LIMIT 1;
+
+#-- Create a summary view
+CREATE OR REPLACE VIEW region_energy_summary AS
+SELECT 
+    r.region_name,
+    ROUND(SUM(e.energy_kwh), 2) AS total_energy,
+    ROUND(AVG(e.energy_kwh), 2) AS avg_energy,
+    ROUND(AVG(e.renewable_percentage), 2) AS avg_renewable,
+    COUNT(*) AS total_days
+FROM energy_consumption e
+JOIN region_info r ON e.region_id = r.region_id
+GROUP BY r.region_name;
+
+#-- View the summary
+SELECT * FROM region_energy_summary;
+
+
+#-- Total system-wide energy
+SELECT ROUND(SUM(energy_kwh), 2) AS total_energy FROM energy_consumption;
+
+#-- Highest renewable day
+SELECT date, ROUND(AVG(renewable_percentage), 2) AS avg_renewable
+FROM energy_consumption
+GROUP BY date
+ORDER BY avg_renewable DESC
+LIMIT 1;
+
+#-- Lowest energy day
+SELECT date, ROUND(SUM(energy_kwh), 2) AS total_energy
+FROM energy_consumption
+GROUP BY date
+ORDER BY total_energy ASC
+LIMIT 1;
+
+
